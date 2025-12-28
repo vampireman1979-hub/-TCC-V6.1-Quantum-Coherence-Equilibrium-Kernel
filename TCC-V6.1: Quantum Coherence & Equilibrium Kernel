@@ -1,0 +1,55 @@
+"""
+TCC-V6.1: Quantum Coherence & Equilibrium Kernel
+Scientific implementation (symbolism removed).
+
+T_A(chi) = 300 + 20 * exp(-chi / 10^4)
+Only the decaying term is encoded as a phase rotation.
+"""
+
+import numpy as np
+from qiskit import QuantumCircuit
+
+
+def run_quantum_patch(chi_value: float) -> QuantumCircuit:
+    """
+    Build a 3-qubit circuit encoding the decaying term of T_A(chi)
+    as an Rz phase rotation on qubit 1, followed by entanglement
+    and measurement.
+
+    Parameters
+    ----------
+    chi_value:
+        Real-valued chi parameter used in the exponential decay.
+
+    Returns
+    -------
+    QuantumCircuit
+        Circuit ready to be executed on a simulator or device.
+    """
+    qc = QuantumCircuit(3)
+
+    # Put qubit 1 into superposition
+    qc.h(1)
+
+    # Decaying exponential term: 20 * exp(-chi / 1e4)
+    decay_term = 20.0 * np.exp(-chi_value / 10_000.0)
+
+    # Normalise to angle in [0, 2π]
+    theta_x = (decay_term / 320.0) * (2.0 * np.pi)
+
+    # Apply phase rotation on qubit 1
+    qc.rz(theta_x, 1)
+
+    # Entangle qubit 1 with qubit 2
+    qc.cx(1, 2)
+
+    # Measure all qubits (adds classical bits automatically)
+    qc.measure_all()
+
+    return qc
+
+
+if __name__ == "__main__":
+    circuit = run_quantum_patch(chi_value=100_000.0)
+    print("Circuit generated successfully.")
+    print(circuit.draw())
